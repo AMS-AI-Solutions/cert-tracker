@@ -1,0 +1,13 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Exclude the uploads directory - stores user-uploaded files at runtime
+uploads/
+
+# Virtual environments
+.venv
