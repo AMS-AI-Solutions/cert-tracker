@@ -1,0 +1,41 @@
+# .github/workflows/dev-ci.yml
+name: 🛠️ Dev CI
+run-name: "🧪✅ Run unit tests and validation"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'dev/**'
+
+jobs:
+  lint:
+    name: 🧹 Lint with Ruff
+    runs-on: windows-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'  # Adjust to match your pyproject.toml
+
+      - name: 📦 Install uv
+        shell: pwsh
+        run: |
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 📦 Create virtual environment and install dependencies
+        shell: pwsh
+        run: |
+          uv venv
+          .\.venv\Scripts\Activate.ps1
+          uv pip install ruff
+
+      - name: 🧹 Run Ruff
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          ruff check .
