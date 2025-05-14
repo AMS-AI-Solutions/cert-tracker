@@ -1,6 +1,9 @@
-from pathlib import Path
-typing: List, Type, Generic, TypeVar
 import csv
+
+from pathlib import Path
+from pydantic import BaseModel
+from typing import List, Type, Generic, TypeVar
+
 T = TypeVar('T', bound=BaseModel)
 
 class CsvHandler(Generic[T]):

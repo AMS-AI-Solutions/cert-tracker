@@ -1,6 +1,6 @@
 from datetime import date
 
-class CertificateService:
+class CertTrackerService:
     def __init__(
         self,
         employee_cert_repo: EmployeeCertificateRepository,

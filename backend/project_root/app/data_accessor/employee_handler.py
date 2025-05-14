@@ -1,4 +1,10 @@
-class EmployeeRepository(CsvHandler[Employee]):
+from pathlib import Path
+from typing import List, Optional
+
+from data_models.employee import Employee
+from data_accessor.csv_handler import CsvHandler
+
+class EmployeeHandler(CsvHandler[Employee]):
     """
     Repository for Employee data loaded from a CSV file.
     """
