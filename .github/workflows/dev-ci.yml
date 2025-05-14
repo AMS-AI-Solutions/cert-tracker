@@ -1,6 +1,6 @@
 # .github/workflows/dev-ci.yml
 name: 🛠️ Dev CI
-run-name: "🧪✅ Run unit tests and validation"
+run-name: "🧪✅ Lint, Test, and Audit"
 
 on:
   workflow_dispatch:
@@ -9,8 +9,8 @@ on:
       - 'dev/**'
 
 jobs:
-  lint:
-    name: 🧹 Lint with Ruff
+  lint-test-audit:
+    name: 🧹 Lint, 🧪 Test & 🔒 Audit
     runs-on: windows-latest
 
     steps:
@@ -20,22 +20,34 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # Adjust to match your pyproject.toml
+          python-version: '3.12'  # Match pyproject.toml
 
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 📦 Create virtual environment and install dependencies
+      - name: 📦 Install dependencies
         shell: pwsh
         run: |
           uv venv
           .\.venv\Scripts\Activate.ps1
-          uv pip install ruff
+          uv pip install ruff pytest pip-audit
 
-      - name: 🧹 Run Ruff
+      - name: 🧹 Lint with Ruff
         shell: pwsh
         run: |
           .\.venv\Scripts\Activate.ps1
           ruff check .
+
+      - name: 🧪 Run tests
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          pytest backend/project_root/tests
+
+      - name: 🔒 Check for vulnerabilities (pip-audit)
+        shell: pwsh
+        run: |
+          .\.venv\Scripts\Activate.ps1
+          pip-audit
