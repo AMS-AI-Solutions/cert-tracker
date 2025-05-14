@@ -1,3 +1,4 @@
+from typing import List
 from datetime import date
 
 from data_accessor.course_handler import CourseHandler

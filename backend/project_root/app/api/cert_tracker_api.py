@@ -1,7 +1,7 @@
 # app/api/v1/certificates.py
-from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List
 from datetime import date
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Import Pydantic model and service factory
 from data_models.employee_certificate import EmployeeCertificate
