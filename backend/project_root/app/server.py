@@ -1,12 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
-from app.api.v1.certificates import router as certificates_router
+from api.cert_tracker_api import router 
 
 # Create FastAPI app
 app = FastAPI(title="Certificate Manager")
 
 # Mount API routers
-app.include_router(certificates_router, prefix="/api/v1")
+app.include_router(router, prefix="/api")
 
 if __name__ == "__main__":
     uvicorn.run(
