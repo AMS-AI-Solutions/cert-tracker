@@ -1,4 +1,3 @@
-# .github/workflows/dev-ci.yml
 name: 🛠️ Dev CI
 run-name: "🧪✅ Lint, Test, and Audit"
 
@@ -9,8 +8,8 @@ on:
       - 'dev/**'
 
 jobs:
-  lint-test-audit:
-    name: 🧹 Lint, 🧪 Test & 🔒 Audit
+  lint:
+    name: 🧹 Lint with Ruff
     runs-on: windows-latest
 
     steps:
@@ -20,33 +19,85 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'  # Match pyproject.toml
+          python-version: '3.11'
 
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 📦 Install dependencies
+      - name: 🔧 Setup environment and install Ruff
         shell: pwsh
         run: |
           uv venv
           .\.venv\Scripts\Activate.ps1
-          uv pip install ruff pytest pip-audit
+          uv pip install ruff
 
-      - name: 🧹 Lint with Ruff
+      - name: 🧹 Run Ruff
         shell: pwsh
         run: |
           .\.venv\Scripts\Activate.ps1
           ruff check .
 
-      - name: 🧪 Run tests
+  test:
+    name: 🧪 Run Tests
+    runs-on: windows-latest
+    needs: lint  # Waits for lint to pass before testing
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install uv
+        shell: pwsh
+        run: |
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 🔧 Setup environment and install test dependencies
+        shell: pwsh
+        run: |
+          uv venv
+          .\.venv\Scripts\Activate.ps1
+          uv pip install pytest
+
+      - name: 🧪 Run Pytest
         shell: pwsh
         run: |
           .\.venv\Scripts\Activate.ps1
           pytest backend/project_root/tests
 
-      - name: 🔒 Check for vulnerabilities (pip-audit)
+  audit:
+    name: 🔒 Security Audit
+    runs-on: windows-latest
+    needs: lint  # or `test` if you want audit to run after tests
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install uv
+        shell: pwsh
+        run: |
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 🔧 Setup environment and install audit tools
+        shell: pwsh
+        run: |
+          uv venv
+          .\.venv\Scripts\Activate.ps1
+          uv pip install pip-audit
+
+      - name: 🔒 Run pip-audit
         shell: pwsh
         run: |
           .\.venv\Scripts\Activate.ps1
