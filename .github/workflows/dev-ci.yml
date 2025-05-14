@@ -26,23 +26,18 @@ jobs:
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Setup environment and install Ruff
+      - name: 🔧 Setup and run Ruff
         shell: pwsh
         run: |
+          cd backend
           uv venv
           .\.venv\Scripts\Activate.ps1
           uv pip install ruff
-
-      - name: 🧹 Run Ruff
-        shell: pwsh
-        run: |
-          .\.venv\Scripts\Activate.ps1
           ruff check .
 
   test:
     name: 🧪 Run Tests
     runs-on: windows-latest
-    needs: lint  # Waits for lint to pass before testing
 
     steps:
       - name: ⬇️ Checkout code
@@ -58,23 +53,18 @@ jobs:
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Setup environment and install test dependencies
+      - name: 🔧 Setup and run Pytest
         shell: pwsh
         run: |
+          cd backend
           uv venv
           .\.venv\Scripts\Activate.ps1
           uv pip install pytest
-
-      - name: 🧪 Run Pytest
-        shell: pwsh
-        run: |
-          .\.venv\Scripts\Activate.ps1
-          pytest backend/project_root/tests
+          pytest project_root/tests
 
   audit:
     name: 🔒 Security Audit
     runs-on: windows-latest
-    needs: lint  # or `test` if you want audit to run after tests
 
     steps:
       - name: ⬇️ Checkout code
@@ -83,22 +73,18 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Setup environment and install audit tools
+      - name: 🔧 Setup and run pip-audit
         shell: pwsh
         run: |
+          cd backend
           uv venv
           .\.venv\Scripts\Activate.ps1
           uv pip install pip-audit
-
-      - name: 🔒 Run pip-audit
-        shell: pwsh
-        run: |
-          .\.venv\Scripts\Activate.ps1
           pip-audit
