@@ -6,7 +6,7 @@ from data_accessor.csv_handler import CsvHandler
 
 class EmployeeHandler(CsvHandler[Employee]):
     """
-    Repository for Employee data loaded from a CSV file.
+    Handler for Employee data loaded from a CSV file.
     """
     def __init__(self, file_path: Path):
         # Initialize with the file path and Employee model
