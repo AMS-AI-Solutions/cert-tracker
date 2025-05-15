@@ -79,5 +79,4 @@ jobs:
           uv python pin 3.12
           uv lock
           uv sync
-          .\.venv\Scripts\Activate.ps1
-          pip-audit
+          uv run pip-audit
