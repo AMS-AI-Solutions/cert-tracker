@@ -1,5 +1,5 @@
 name: 🛠️ Dev CI
-run-name: "🧪✅ Lint, Test, and Audit"
+run-name: "🧪✅ Lint, Test, Static Type Check and Audit"
 
 on:
   workflow_dispatch:
