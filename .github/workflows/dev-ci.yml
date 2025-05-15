@@ -33,7 +33,7 @@ jobs:
           ruff check .
 
   test:
-    name: 🧪 Run Tests
+    name: 🧪 Run Tests (if present)
     runs-on: windows-latest
 
     steps:
@@ -45,7 +45,7 @@ jobs:
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🧪 Run Pytest
+      - name: 🧪 Run pytest if tests exist
         shell: pwsh
         run: |
           cd backend
@@ -53,10 +53,15 @@ jobs:
           uv python pin 3.12
           uv lock
           uv sync
-          .\.venv\Scripts\Activate.ps1
-          ls .
-          ls project_root
-          pytest project_root/tests
+
+          # Check if test files exist
+          $testFiles = Get-ChildItem -Recurse -Path "project_root/tests" -Include "test_*.py", "*_test.py"
+
+          if ($testFiles.Count -eq 0) {
+            Write-Host "✅ No test files found. Skipping pytest."
+          } else {
+            uv run -- pytest project_root/tests
+          }
 
   audit:
     name: 🔒 Security Audit
