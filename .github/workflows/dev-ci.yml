@@ -54,6 +54,8 @@ jobs:
           uv lock
           uv sync
           .\.venv\Scripts\Activate.ps1
+          ls .
+          ls project_root
           pytest project_root/tests
 
   audit:
