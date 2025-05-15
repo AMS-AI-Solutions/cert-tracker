@@ -26,13 +26,13 @@ jobs:
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Setup and run Ruff
+      - name: 🔧 Create environment and run Ruff
         shell: pwsh
         run: |
           cd backend
           uv venv
           .\.venv\Scripts\Activate.ps1
-          uv pip install ruff
+          uv pip install  # install based on pyproject.toml + uv.lock
           ruff check .
 
   test:
@@ -53,13 +53,13 @@ jobs:
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Setup and run Pytest
+      - name: 🔧 Create environment and run Pytest
         shell: pwsh
         run: |
           cd backend
           uv venv
           .\.venv\Scripts\Activate.ps1
-          uv pip install pytest
+          uv pip install
           pytest project_root/tests
 
   audit:
@@ -80,11 +80,11 @@ jobs:
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Setup and run pip-audit
+      - name: 🔧 Create environment and run pip-audit
         shell: pwsh
         run: |
           cd backend
           uv venv
           .\.venv\Scripts\Activate.ps1
-          uv pip install pip-audit
+          uv pip install
           pip-audit
