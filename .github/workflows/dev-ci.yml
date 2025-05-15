@@ -53,6 +53,7 @@ jobs:
           uv python pin 3.12
           uv lock
           uv sync
+          .\.venv\Scripts\Activate.ps1
           pytest project_root/tests
 
   audit:
@@ -76,4 +77,5 @@ jobs:
           uv python pin 3.12
           uv lock
           uv sync
+          .\.venv\Scripts\Activate.ps1
           pip-audit
