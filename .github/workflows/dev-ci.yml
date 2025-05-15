@@ -63,6 +63,29 @@ jobs:
             uv run -- pytest project_root/tests
           }
 
+  type-check:
+    name: 🔍 Static Type Check with mypy
+    runs-on: windows-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Install uv
+        shell: pwsh
+        run: |
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 🔍 Run mypy
+        shell: pwsh
+        run: |
+          cd backend
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
+          uv run -- mypy .
+
   audit:
     name: 🔒 Security Audit
     runs-on: windows-latest
