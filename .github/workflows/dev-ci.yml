@@ -16,23 +16,19 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Create environment and run Ruff
+      - name: 🧹 Run Ruff
         shell: pwsh
         run: |
           cd backend
-          uv venv
-          .\.venv\Scripts\Activate.ps1
-          uv pip install  # install based on pyproject.toml + uv.lock
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
           ruff check .
 
   test:
@@ -43,23 +39,19 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Create environment and run Pytest
+      - name: 🧪 Run Pytest
         shell: pwsh
         run: |
           cd backend
-          uv venv
-          .\.venv\Scripts\Activate.ps1
-          uv pip install
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
           pytest project_root/tests
 
   audit:
@@ -70,21 +62,17 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 🔧 Create environment and run pip-audit
+      - name: 🔒 Run pip-audit
         shell: pwsh
         run: |
           cd backend
-          uv venv
-          .\.venv\Scripts\Activate.ps1
-          uv pip install
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
           pip-audit
