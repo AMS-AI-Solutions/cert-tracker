@@ -1,6 +1,5 @@
-# .github/workflows/dev-ci.yml
 name: 🛠️ Dev CI
-run-name: "🧪✅ Run unit tests and validation"
+run-name: "🧪✅ Lint, Test, Static Type Check and Audit"
 
 on:
   workflow_dispatch:
@@ -17,25 +16,95 @@ jobs:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'  # Adjust to match your pyproject.toml
+      - name: 📦 Install uv
+        shell: pwsh
+        run: |
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 🧹 Run Ruff
+        shell: pwsh
+        run: |
+          cd backend
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
+          .\.venv\Scripts\Activate.ps1
+          ruff check .
+
+  test:
+    name: 🧪 Run Tests (if present)
+    runs-on: windows-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
 
       - name: 📦 Install uv
         shell: pwsh
         run: |
           iwr -useb https://astral.sh/uv/install.ps1 | iex
 
-      - name: 📦 Create virtual environment and install dependencies
+      - name: 🧪 Run pytest if tests exist
         shell: pwsh
         run: |
-          uv venv
-          .\.venv\Scripts\Activate.ps1
-          uv pip install ruff
+          cd backend
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
 
-      - name: 🧹 Run Ruff
+          # Check if test files exist
+          $testFiles = Get-ChildItem -Recurse -Path "project_root/tests" -Include "test_*.py", "*_test.py"
+
+          if ($testFiles.Count -eq 0) {
+            Write-Host "✅ No test files found. Skipping pytest."
+          } else {
+            uv run -- pytest project_root/tests
+          }
+
+  type-check:
+    name: 🔍 Static Type Check with mypy
+    runs-on: windows-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Install uv
         shell: pwsh
         run: |
-          .\.venv\Scripts\Activate.ps1
-          ruff check .
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 🔍 Run mypy
+        shell: pwsh
+        run: |
+          cd backend
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
+          uv run -- mypy .
+
+  audit:
+    name: 🔒 Security Audit
+    runs-on: windows-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Install uv
+        shell: pwsh
+        run: |
+          iwr -useb https://astral.sh/uv/install.ps1 | iex
+
+      - name: 🔒 Run pip-audit
+        shell: pwsh
+        run: |
+          cd backend
+          uv python install 3.12
+          uv python pin 3.12
+          uv lock
+          uv sync
+          uv run pip-audit

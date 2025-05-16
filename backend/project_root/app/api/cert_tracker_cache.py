@@ -1,4 +1,5 @@
 from pathlib import Path
+from functools import lru_cache
 from fastapi import FastAPI, Depends
 
 from data_models.course import Course
@@ -12,8 +13,6 @@ from data_accessor.employee_certificate_handler import EmployeeCertificateHandle
 
 app = FastAPI(title="Certificate Manager")
 
-# Dependency factories (load CSVs once via lru_cache)
-from functools import lru_cache
 
 @lru_cache()
 def get_employee_repo():
