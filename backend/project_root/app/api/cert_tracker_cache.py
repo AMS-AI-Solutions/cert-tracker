@@ -1,4 +1,5 @@
 from pathlib import Path
+from functools import lru_cache
 from fastapi import FastAPI, Depends
 
 from data_models.course import Course
