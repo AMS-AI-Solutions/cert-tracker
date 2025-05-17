@@ -4,7 +4,6 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Generator
 
-from app.data_models.employee import Employee
 from app.data_accessor.csv_handler import CsvHandler
 from app.data_accessor.employee_handler import EmployeeHandler
 
