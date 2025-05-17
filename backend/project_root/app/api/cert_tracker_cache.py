@@ -10,8 +10,6 @@ from app.data_models.employee_certificate import EmployeeCertificate
 from app.data_processor.cert_tracker_service import CertTrackerService
 from app.data_accessor.employee_certificate_handler import EmployeeCertificateHandler
 
-from functools import lru_cache # Dependency factories (load CSVs once via lru_cache)
-
 app = FastAPI(title="Certificate Manager")
 
 @lru_cache()
