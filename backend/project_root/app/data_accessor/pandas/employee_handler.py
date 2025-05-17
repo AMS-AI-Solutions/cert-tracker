@@ -33,4 +33,4 @@ class EmployeeHandler(PandasHandler[Employee], EmployeeHandlerInterface):
         if matches.empty:
             return None
         emp_id = matches.index[0]
-        return self.df.at[emp_id, 'department']
+        return self.df.at[emp_id, 'company_name']
