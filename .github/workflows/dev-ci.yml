@@ -84,7 +84,9 @@ jobs:
           uv python pin 3.12
           uv lock
           uv sync
+          cd project_root
           uv run -- mypy -p app
+          uv run -- mypy -p tests
 
   audit:
     name: 🔒 Security Audit
