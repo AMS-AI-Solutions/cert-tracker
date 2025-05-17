@@ -4,8 +4,8 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Import Pydantic model and service factory
-from data_models.employee_certificate import EmployeeCertificate
-from api.cert_tracker_cache import get_service
+from app.data_models.employee_certificate import EmployeeCertificate
+from app.api.cert_tracker_cache import get_service
 
 # Define the router
 router = APIRouter()

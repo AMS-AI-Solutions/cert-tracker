@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from api.cert_tracker_api import router 
+from app.api.cert_tracker_api import router 
 
 # Create FastAPI app
 app = FastAPI(title="Certificate Manager")
