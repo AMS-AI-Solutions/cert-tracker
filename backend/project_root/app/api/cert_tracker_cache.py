@@ -2,13 +2,13 @@ from pathlib import Path
 from functools import lru_cache
 from fastapi import FastAPI, Depends
 
-from data_models.course import Course
-from data_models.employee import Employee
-from data_accessor.course_handler import CourseHandler
-from data_accessor.employee_handler import EmployeeHandler
-from data_models.employee_certificate import EmployeeCertificate
-from data_processor.cert_tracker_service import CertTrackerService
-from data_accessor.employee_certificate_handler import EmployeeCertificateHandler
+from app.data_models.course import Course
+from app.data_models.employee import Employee
+from app.data_accessor.course_handler import CourseHandler
+from app.data_accessor.employee_handler import EmployeeHandler
+from app.data_models.employee_certificate import EmployeeCertificate
+from app.data_processor.cert_tracker_service import CertTrackerService
+from app.data_accessor.employee_certificate_handler import EmployeeCertificateHandler
 
 from functools import lru_cache # Dependency factories (load CSVs once via lru_cache)
 
