@@ -1,10 +1,10 @@
 from typing import List
 from datetime import date
 
-from data_accessor.course_handler import CourseHandler
-from data_accessor.employee_handler import EmployeeHandler
-from data_models.employee_certificate import EmployeeCertificate
-from data_accessor.employee_certificate_handler import EmployeeCertificateHandler
+from app.data_accessor.course_handler import CourseHandler
+from app.data_accessor.employee_handler import EmployeeHandler
+from app.data_models.employee_certificate import EmployeeCertificate
+from app.data_accessor.employee_certificate_handler import EmployeeCertificateHandler
 
 class CertTrackerService:
     def __init__(
