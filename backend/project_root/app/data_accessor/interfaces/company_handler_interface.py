@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from datetime import date
 from app.data_models.company import Company
 
 class CourseHandlerInterface(ABC):
