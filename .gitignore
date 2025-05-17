@@ -1,5 +1,6 @@
 # Python‐generated files (ignored recursively)
 **/__pycache__/
+**/.pytest_cache/
 **/*.py[oc]
 
 # Build artifacts
