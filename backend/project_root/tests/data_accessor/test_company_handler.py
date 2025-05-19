@@ -1,6 +1,5 @@
 import pytest
 import tempfile
-import pandas as pd
 from pathlib import Path
 from textwrap import dedent
 
