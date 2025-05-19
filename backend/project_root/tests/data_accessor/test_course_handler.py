@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock
+#from unittest.mock import MagicMock
 from unittest.mock import patch
 from app.data_accessor.pandas.course_handler import CourseHandler
 from app.data_models.course import Course
