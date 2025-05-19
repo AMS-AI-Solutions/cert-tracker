@@ -23,10 +23,10 @@ class CourseHandler(PandasHandler[Course], CourseHandlerInterface):
             row_series = self.df.loc[course_id]
         except KeyError:
             return None
-        row_dict: Dict[str, Any] = row_series.to_dict()
+        row_dict = {str(k): v for k, v in row_series.to_dict().items()}
         row_dict["course_id"] = course_id
-        return Course(**{str(k): v for k, v in row_dict.items()})
-
+        return Course(**row_dict)
+    
     def get_by_course_name_from_certificate_name(self, certificate_name: str) -> Optional[str]:
         """
         Retrieve the course name that corresponds to the given certificate name.
