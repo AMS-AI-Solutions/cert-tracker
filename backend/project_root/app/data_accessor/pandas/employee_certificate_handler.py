@@ -1,7 +1,7 @@
 from pathlib import Path
 from datetime import date, timedelta
 from collections import Counter, defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from app.data_models.employee_certificate import EmployeeCertificate
 from app.data_accessor.pandas.pandas_handler import PandasHandler
