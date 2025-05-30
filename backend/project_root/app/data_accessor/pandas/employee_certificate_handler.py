@@ -1,101 +1,163 @@
 from pathlib import Path
-from typing import List, Optional, Dict
 from datetime import date, timedelta
 from collections import Counter, defaultdict
+from typing import Any, Dict, List, Optional
 
-from app.data_accessor.csv_handler import CsvHandler
 from app.data_models.employee_certificate import EmployeeCertificate
+from app.data_accessor.pandas.pandas_handler import PandasHandler
+from app.data_accessor.interfaces.employee_certificate_handler_interface import (
+    EmployeeCertificateHandlerInterface,
+)
 
-class EmployeeCertificateHandler(CsvHandler[EmployeeCertificate]):
+CertList = List[EmployeeCertificate]
+IntMap = Dict[int, int]
+StrMap = Dict[str, int]
+
+
+class EmployeeCertificateHandler(
+    PandasHandler[EmployeeCertificate],
+    EmployeeCertificateHandlerInterface,
+):
     """
-    Handler for Employee Certificate data loaded from a CSV file.
-    Provides both read-only querying and cache management.
+    Query and cache EmployeeCertificate records in a Pandas DataFrame.
     """
+
     def __init__(self, file_path: Path):
-        super().__init__(file_path, EmployeeCertificate)
-        self._cache: Optional[List[EmployeeCertificate]] = None
+        super().__init__(
+            file_path=file_path,
+            model=EmployeeCertificate,
+            parse_dates=["issue_date", "expiry_date"],
+            index_col=None,
+        )
+        # Convert pandas Timestamp → date for comparisons
+        for col in ("issue_date", "expiry_date"):
+            self.df[col] = self.df[col].dt.date
 
-    def load_all(self) -> List[EmployeeCertificate]:
-        """Load and cache all employee certificates from CSV."""
-        if self._cache is None:
-            self._cache = super().load_all()
-        return self._cache
-
-    def reload_all(self) -> None:
-        """Clear cache to force reloading from CSV on next access."""
-        self._cache = None
-
-    # Alias for reload_all
-    clear_cache = reload_all
+    def get_by_id(self, certificate_id: str) -> Optional[EmployeeCertificate]:
+        """
+        Retrieve a certificate by its unique ID.
+        (Implementing abstract method from the interface.)
+        """
+        return self.get_certificate_by_id(certificate_id)
 
     def get_certificate_by_id(self, certificate_id: str) -> Optional[EmployeeCertificate]:
-        """Retrieve a single certificate by its unique ID."""
+        """
+        Retrieve a certificate by its unique ID.
+        """
         return next(
-            (cert for cert in self.load_all() if cert.certificate_id == certificate_id),
-            None
+            (
+                cert
+                for cert in self.load_all()
+                if str(cert.certificate_id) == str(certificate_id)
+            ),
+            None,
         )
 
-    def get_employee_certificates_by_employee_id(self, employee_id: int) -> List[EmployeeCertificate]:
-        """Retrieve all certificates for a specific employee by their ID."""
-        return [cert for cert in self.load_all() if cert.employee_id == employee_id]
-
-    def get_employee_certificates_by_course_id(self, course_id: str) -> List[EmployeeCertificate]:
-        """Retrieve all certificates for a specific course by its ID."""
-        return [cert for cert in self.load_all() if cert.course_id == course_id]
-
-    def get_expired_employee_certificates_by_date_range(
-        self, start_date: date, end_date: date
-    ) -> List[EmployeeCertificate]:
-        """Retrieve all expired employee certificates within a specific date range."""
+    def find_by_certificate_name(self, search_term: str) -> CertList:
+        """
+        Return all certificates whose `certificate_name` contains the given search term,
+        matching case-insensitively.
+        """
+        term = search_term.lower()
         return [
-            cert for cert in self.load_all()
+            cert
+            for cert in self.load_all()
+            if term in cert.certificate_name.lower()
+        ]
+
+    def count_certificates_by_employee(self) -> IntMap:
+        """
+        Map employee_id → number of certificates held.
+        """
+        return dict(Counter(cert.employee_id for cert in self.load_all()))
+
+    def count_certificates_by_course(self) -> StrMap:
+        """
+        Map course_id → number of certificates issued.
+        """
+        return dict(Counter(cert.course_id for cert in self.load_all()))
+
+    def group_certificates_by_employee(self) -> Dict[int, CertList]:
+        """
+        Map employee_id → list of that employee's certificates.
+        """
+        groups: Dict[int, CertList] = defaultdict(list)
+        for cert in self.load_all():
+            groups[cert.employee_id].append(cert)
+        return dict(groups)
+
+    def group_certificates_by_course(self) -> Dict[str, CertList]:
+        """
+        Map course_id → list of certificates for that course.
+        """
+        groups: Dict[str, CertList] = defaultdict(list)
+        for cert in self.load_all():
+            groups[cert.course_id].append(cert)
+        return dict(groups)
+
+    def get_employee_certificates_by_employee_id(self, employee_id: int) -> CertList:
+        """
+        Retrieve all certificates for a specific employee.
+        """
+        return [
+            cert
+            for cert in self.load_all()
+            if cert.employee_id == employee_id
+        ]
+
+    def get_employee_certificates_by_course_id(self, course_id: str) -> CertList:
+        """
+        Retrieve all certificates for a specific course.
+        """
+        return [
+            cert
+            for cert in self.load_all()
+            if cert.course_id == course_id
+        ]
+
+    def get_certificates_expiring_in_time_range(
+        self, start_date: date, end_date: date
+    ) -> CertList:
+        """
+        Retrieve certificates with expiry dates between start_date and end_date, inclusive.
+        """
+        return [
+            cert
+            for cert in self.load_all()
             if start_date <= cert.expiry_date <= end_date
         ]
 
-    def get_active_certificates(self, as_of: date = date.today()) -> List[EmployeeCertificate]:
-        """Retrieve all certificates not yet expired as of a given date."""
-        return [cert for cert in self.load_all() if cert.expiry_date > as_of]
-
-    def get_expired_certificates(self, as_of: date = date.today()) -> List[EmployeeCertificate]:
-        """Retrieve all certificates already expired as of a given date."""
-        return [cert for cert in self.load_all() if cert.expiry_date <= as_of]
-
     def get_certificates_expiring_within(
-        self, days: int, from_date: date = date.today()
-    ) -> List[EmployeeCertificate]:
-        """Retrieve certificates expiring within the next N days."""
+        self, days: int, from_date: date
+    ) -> CertList:
+        """
+        Retrieve certificates whose expiry_date falls between `from_date`
+        and `from_date + days`, inclusive.
+        """
         cutoff = from_date + timedelta(days=days)
-        return [
-            cert for cert in self.load_all()
-            if from_date <= cert.expiry_date <= cutoff
-        ]
+        return self.get_certificates_expiring_in_time_range(from_date, cutoff)
 
-    def count_certificates_by_employee(self) -> Dict[int, int]:
-        """Count how many certificates each employee holds."""
-        return Counter(cert.employee_id for cert in self.load_all())
+    def get_upcoming_expirations(self, days_ahead: int) -> CertList:
+        """
+        Get certificates expiring within the next `days_ahead` days from today.
+        """
+        today = date.today()
+        return self.get_certificates_expiring_in_time_range(
+            today, today + timedelta(days=days_ahead)
+        )
 
-    def count_certificates_by_course(self) -> Dict[str, int]:
-        """Count how many certificates have been issued per course."""
-        return Counter(cert.course_id for cert in self.load_all())
+    def count_expirations_by_company(self, days_ahead: int) -> Dict[str, int]:
+        """
+        Count upcoming expirations, grouped by sponsoring company.
+        """
+        upcoming = self.get_upcoming_expirations(days_ahead)
+        return dict(Counter(cert.sponsoring_company for cert in upcoming))  # type: ignore
 
-    def group_certificates_by_employee(self) -> Dict[int, List[EmployeeCertificate]]:
-        """Group certificates into lists keyed by employee ID."""
-        groups: Dict[int, List[EmployeeCertificate]] = defaultdict(list)
+    def certificates_by_employee_summary(self) -> Dict[int, List[str]]:
+        """
+        Map each employee_id → list of their certificate names.
+        """
+        summary: Dict[int, List[str]] = defaultdict(list)
         for cert in self.load_all():
-            groups[cert.employee_id].append(cert)
-        return groups
-
-    def group_certificates_by_course(self) -> Dict[str, List[EmployeeCertificate]]:
-        """Group certificates into lists keyed by course ID."""
-        groups: Dict[str, List[EmployeeCertificate]] = defaultdict(list)
-        for cert in self.load_all():
-            groups[cert.course_id].append(cert)
-        return groups
-
-    def find_by_certificate_name(self, substr: str) -> List[EmployeeCertificate]:
-        """Case-insensitive substring search on certificate_name."""
-        term = substr.lower()
-        return [
-            cert for cert in self.load_all()
-            if term in cert.certificate_name.lower()
-        ]
+            summary[cert.employee_id].append(cert.certificate_name)
+        return dict(summary)

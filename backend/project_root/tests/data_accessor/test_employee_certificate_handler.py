@@ -5,7 +5,8 @@ from pathlib import Path
 from textwrap import dedent
 from datetime import date
 
-from app.data_accessor.employee_certificate_handler import EmployeeCertificateHandler
+from app.data_accessor.pandas.employee_certificate_handler import EmployeeCertificateHandler
+from app.data_models.employee_certificate import EmployeeCertificate
 
 @pytest.fixture
 def employee_certificate_csv_file() -> Generator[Path, None, None]:

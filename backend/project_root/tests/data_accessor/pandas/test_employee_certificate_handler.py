@@ -51,21 +51,13 @@ def test_get_employee_certificates_by_course_id(csv_file):
 
 def test_get_expired_employee_certificates_by_date_range(csv_file):
     handler = EmployeeCertificateHandler(csv_file)
-    expired = handler.get_expired_employee_certificates_by_date_range(
+    expired = handler.get_certificates_expiring_in_time_range(
         start_date=date(2023, 1, 1),
         end_date=date(2023, 12, 31)
     )
     assert len(expired) == 1
     assert expired[0].certificate_id == "CERT003"
 
-
-def test_get_active_and_expired(csv_file):
-    handler = EmployeeCertificateHandler(csv_file)
-    as_of = date(2024, 1, 1)
-    active = handler.get_active_certificates(as_of)
-    expired = handler.get_expired_certificates(as_of)
-    assert {c.certificate_id for c in active} == {"CERT001", "CERT002"}
-    assert {c.certificate_id for c in expired} == {"CERT003"}
 
 
 def test_get_certificates_expiring_within(csv_file):
@@ -95,9 +87,3 @@ def test_find_by_certificate_name(csv_file):
     assert len(results) == 2
 
 
-def test_cache_clear(csv_file):
-    handler = EmployeeCertificateHandler(csv_file)
-    _ = handler.load_all()
-    assert handler._cache is not None
-    handler.clear_cache()
-    assert handler._cache is None
