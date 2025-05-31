@@ -1,7 +1,8 @@
 from pathlib import Path
 from datetime import date, timedelta
-from collections import Counter, defaultdict
 from typing import Dict, List, Optional
+
+import pandas as pd
 
 from app.data_models.employee_certificate import EmployeeCertificate
 from app.data_accessor.pandas.pandas_handler import PandasHandler
@@ -34,130 +35,82 @@ class EmployeeCertificateHandler(
             self.df[col] = self.df[col].dt.date
 
     def get_by_id(self, certificate_id: str) -> Optional[EmployeeCertificate]:
-        """
-        Retrieve a certificate by its unique ID.
-        (Implementing abstract method from the interface.)
-        """
         return self.get_certificate_by_id(certificate_id)
 
     def get_certificate_by_id(self, certificate_id: str) -> Optional[EmployeeCertificate]:
-        """
-        Retrieve a certificate by its unique ID.
-        """
-        return next(
-            (
-                cert
-                for cert in self.load_all()
-                if str(cert.certificate_id) == str(certificate_id)
-            ),
-            None,
-        )
+        mask = self.df["certificate_id"].astype(str) == str(certificate_id)
+        if not mask.any():
+            return None
+        row = self.df.loc[mask].iloc[0]
+        data = row.to_dict()
+        data["certificate_id"] = certificate_id
+        return EmployeeCertificate(**data)
 
     def find_by_certificate_name(self, search_term: str) -> CertList:
-        """
-        Return all certificates whose `certificate_name` contains the given search term,
-        matching case-insensitively.
-        """
-        term = search_term.lower()
-        return [
-            cert
-            for cert in self.load_all()
-            if term in cert.certificate_name.lower()
-        ]
+        mask = self.df["certificate_name"].str.contains(search_term, case=False, na=False)
+        records = self.df.loc[mask].to_dict(orient="records")
+        return [EmployeeCertificate(**r) for r in records]
 
     def count_certificates_by_employee(self) -> IntMap:
-        """
-        Map employee_id → number of certificates held.
-        """
-        return dict(Counter(cert.employee_id for cert in self.load_all()))
+        # Series: index=employee_id, values=count
+        return self.df["employee_id"].value_counts().to_dict()
 
     def count_certificates_by_course(self) -> StrMap:
-        """
-        Map course_id → number of certificates issued.
-        """
-        return dict(Counter(cert.course_id for cert in self.load_all()))
+        return self.df["course_id"].value_counts().to_dict()
 
     def group_certificates_by_employee(self) -> Dict[int, CertList]:
-        """
-        Map employee_id → list of that employee's certificates.
-        """
-        groups: Dict[int, CertList] = defaultdict(list)
-        for cert in self.load_all():
-            groups[cert.employee_id].append(cert)
-        return dict(groups)
+        groups: Dict[int, CertList] = {}
+        for emp_id, grp in self.df.groupby("employee_id"):
+            records = grp.to_dict(orient="records")
+            groups[emp_id] = [EmployeeCertificate(**r) for r in records]
+        return groups
 
     def group_certificates_by_course(self) -> Dict[str, CertList]:
-        """
-        Map course_id → list of certificates for that course.
-        """
-        groups: Dict[str, CertList] = defaultdict(list)
-        for cert in self.load_all():
-            groups[cert.course_id].append(cert)
-        return dict(groups)
+        groups: Dict[str, CertList] = {}
+        for course_id, grp in self.df.groupby("course_id"):
+            records = grp.to_dict(orient="records")
+            groups[course_id] = [EmployeeCertificate(**r) for r in records]
+        return groups
 
     def get_employee_certificates_by_employee_id(self, employee_id: int) -> CertList:
-        """
-        Retrieve all certificates for a specific employee.
-        """
-        return [
-            cert
-            for cert in self.load_all()
-            if cert.employee_id == employee_id
-        ]
+        grp = self.df[self.df["employee_id"] == employee_id]
+        return [EmployeeCertificate(**r) for r in grp.to_dict(orient="records")]
 
     def get_employee_certificates_by_course_id(self, course_id: str) -> CertList:
-        """
-        Retrieve all certificates for a specific course.
-        """
-        return [
-            cert
-            for cert in self.load_all()
-            if cert.course_id == course_id
-        ]
+        grp = self.df[self.df["course_id"] == course_id]
+        return [EmployeeCertificate(**r) for r in grp.to_dict(orient="records")]
 
     def get_certificates_expiring_in_time_range(
         self, start_date: date, end_date: date
     ) -> CertList:
-        """
-        Retrieve certificates with expiry dates between start_date and end_date, inclusive.
-        """
-        return [
-            cert
-            for cert in self.load_all()
-            if start_date <= cert.expiry_date <= end_date
-        ]
+        mask = (self.df["expiry_date"] >= start_date) & (self.df["expiry_date"] <= end_date)
+        return [EmployeeCertificate(**r) for r in self.df.loc[mask].to_dict(orient="records")]
 
     def get_certificates_expiring_within(
         self, days: int, from_date: date
     ) -> CertList:
-        """
-        Retrieve certificates whose expiry_date falls between `from_date`
-        and `from_date + days`, inclusive.
-        """
         cutoff = from_date + timedelta(days=days)
         return self.get_certificates_expiring_in_time_range(from_date, cutoff)
 
     def get_upcoming_expirations(self, days_ahead: int) -> CertList:
-        """
-        Get certificates expiring within the next `days_ahead` days from today.
-        """
         today = date.today()
         return self.get_certificates_expiring_in_time_range(
             today, today + timedelta(days=days_ahead)
         )
 
     def count_expirations_by_company(self, days_ahead: int) -> Dict[str, int]:
-        """
-        Count upcoming expirations, grouped by sponsoring company.
-        """
-        upcoming = self.get_upcoming_expirations(days_ahead)
-        return dict(Counter(cert.sponsoring_company for cert in upcoming))  # type: ignore
+        upcoming_df = pd.DataFrame(
+            [c.__dict__ for c in self.get_upcoming_expirations(days_ahead)]
+        )
+        if upcoming_df.empty:
+            return {}
+        return upcoming_df["sponsoring_company"].value_counts().to_dict()  # type: ignore
 
     def certificates_by_employee_summary(self) -> Dict[int, List[str]]:
-        """
-        Map each employee_id → list of their certificate names.
-        """
-        summary: Dict[int, List[str]] = defaultdict(list)
-        for cert in self.load_all():
-            summary[cert.employee_id].append(cert.certificate_name)
-        return dict(summary)
+        # group certificate_name lists by employee_id
+        return (
+            self.df
+            .groupby("employee_id")["certificate_name"]
+            .apply(list)
+            .to_dict()
+        )
