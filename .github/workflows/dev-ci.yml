@@ -25,8 +25,7 @@ jobs:
         shell: pwsh
         run: |
           cd backend
-          uv python install 3.12
-          uv python pin 3.12
+          uv venv
           uv lock
           uv sync
           .\.venv\Scripts\Activate.ps1
@@ -49,8 +48,7 @@ jobs:
         shell: pwsh
         run: |
           cd backend
-          uv python install 3.12
-          uv python pin 3.12
+          uv venv
           uv lock
           uv sync
 
@@ -80,8 +78,6 @@ jobs:
         shell: pwsh
         run: |
           cd backend
-          uv python install 3.12
-          uv python pin 3.12
           uv lock
           uv sync
           cd project_root
