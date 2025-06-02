@@ -44,7 +44,7 @@ class EmployeeCertificateHandler(
         row = self.df.loc[mask].iloc[0]
         data = row.to_dict()
         data["certificate_id"] = certificate_id
-        return EmployeeCertificate(**data)
+        return EmployeeCertificate.model_validate(data)
 
     def find_by_certificate_name(self, search_term: str) -> List[EmployeeCertificate]:
         mask = self.df["certificate_name"].str.contains(search_term, case=False, na=False)
@@ -67,13 +67,11 @@ class EmployeeCertificateHandler(
             groups[emp_id_int] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
-    def group_certificates_by_course(self) -> Dict[int, CertList]:
-        groups: Dict[int, CertList] = {}
-        self.df["course_id"] = self.df["course_id"].astype(int)
+    def group_certificates_by_course(self) -> Dict[str, CertList]:
+        groups: Dict[str, CertList] = {}
         for course_id, grp in self.df.groupby("course_id"):
-            course_id_int: int = cast(int, course_id_int)
             records = grp.to_dict(orient="records")
-            groups[course_id_int] = [EmployeeCertificate.model_validate(r) for r in records]
+            groups[str(course_id)] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
     def get_employee_certificates_by_employee_id(self, employee_id: int) -> CertList:

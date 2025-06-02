@@ -35,7 +35,7 @@ class EmployeeCertificateHandlerInterface(ABC):
         ...
 
     @abstractmethod
-    def group_certificates_by_course(self) -> Dict[int, List[EmployeeCertificate]]:
+    def group_certificates_by_course(self) -> Dict[str, List[EmployeeCertificate]]:
         """Group certificates into lists keyed by course_id."""
         ...
 
