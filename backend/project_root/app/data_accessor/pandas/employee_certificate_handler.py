@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import date, timedelta
-from typing import Dict, List, Optional, Any, Hashable
+from typing import cast, Dict, List, Optional, Any, Hashable
 
 import pandas as pd
 
@@ -60,16 +60,20 @@ class EmployeeCertificateHandler(
 
     def group_certificates_by_employee(self) -> Dict[int, CertList]:
         groups: Dict[int, CertList] = {}
+        self.df["employee_id"] = self.df["employee_id"].astype(int)
         for emp_id, grp in self.df.groupby("employee_id"):
+            emp_id_int: int = cast(int, emp_id)
             records = grp.to_dict(orient="records")
-            groups[int(emp_id)] = [EmployeeCertificate.model_validate(r) for r in records]
+            groups[emp_id_int] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
-    def group_certificates_by_course(self) -> Dict[str, CertList]:
-        groups: Dict[str, CertList] = {}
+    def group_certificates_by_course(self) -> Dict[int, CertList]:
+        groups: Dict[int, CertList] = {}
+        self.df["course_id"] = self.df["course_id"].astype(int)
         for course_id, grp in self.df.groupby("course_id"):
+            course_id_int: int = cast(int, course_id_int)
             records = grp.to_dict(orient="records")
-            groups[int(course_id)] = [EmployeeCertificate.model_validate(r) for r in records]
+            groups[course_id_int] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
     def get_employee_certificates_by_employee_id(self, employee_id: int) -> CertList:
