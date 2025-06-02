@@ -1,6 +1,6 @@
 from pathlib import Path
 from datetime import date, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any, Hashable
 
 import pandas as pd
 
@@ -46,10 +46,10 @@ class EmployeeCertificateHandler(
         data["certificate_id"] = certificate_id
         return EmployeeCertificate(**data)
 
-    def find_by_certificate_name(self, search_term: str) -> CertList:
+    def find_by_certificate_name(self, search_term: str) -> List[EmployeeCertificate]:
         mask = self.df["certificate_name"].str.contains(search_term, case=False, na=False)
-        records = self.df.loc[mask].to_dict(orient="records")
-        return [EmployeeCertificate(**r) for r in records]
+        records: List[Dict[Hashable, Any]] = self.df.loc[mask].to_dict(orient="records")
+        return [EmployeeCertificate.model_validate(r) for r in records]
 
     def count_certificates_by_employee(self) -> IntMap:
         # Series: index=employee_id, values=count
@@ -62,29 +62,29 @@ class EmployeeCertificateHandler(
         groups: Dict[int, CertList] = {}
         for emp_id, grp in self.df.groupby("employee_id"):
             records = grp.to_dict(orient="records")
-            groups[emp_id] = [EmployeeCertificate(**r) for r in records]
+            groups[emp_id] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
     def group_certificates_by_course(self) -> Dict[str, CertList]:
         groups: Dict[str, CertList] = {}
         for course_id, grp in self.df.groupby("course_id"):
             records = grp.to_dict(orient="records")
-            groups[course_id] = [EmployeeCertificate(**r) for r in records]
+            groups[course_id] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
     def get_employee_certificates_by_employee_id(self, employee_id: int) -> CertList:
         grp = self.df[self.df["employee_id"] == employee_id]
-        return [EmployeeCertificate(**r) for r in grp.to_dict(orient="records")]
+        return [EmployeeCertificate.model_validate(r) for r in grp.to_dict(orient="records")]
 
     def get_employee_certificates_by_course_id(self, course_id: str) -> CertList:
         grp = self.df[self.df["course_id"] == course_id]
-        return [EmployeeCertificate(**r) for r in grp.to_dict(orient="records")]
+        return [EmployeeCertificate.model_validate(r) for r in grp.to_dict(orient="records")]
 
     def get_certificates_expiring_in_time_range(
         self, start_date: date, end_date: date
     ) -> CertList:
         mask = (self.df["expiry_date"] >= start_date) & (self.df["expiry_date"] <= end_date)
-        return [EmployeeCertificate(**r) for r in self.df.loc[mask].to_dict(orient="records")]
+        return [EmployeeCertificate.model_validate(r) for r in self.df.loc[mask].to_dict(orient="records")]
 
     def get_certificates_expiring_within(
         self, days: int, from_date: date
