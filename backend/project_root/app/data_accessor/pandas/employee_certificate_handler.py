@@ -62,14 +62,14 @@ class EmployeeCertificateHandler(
         groups: Dict[int, CertList] = {}
         for emp_id, grp in self.df.groupby("employee_id"):
             records = grp.to_dict(orient="records")
-            groups[emp_id] = [EmployeeCertificate.model_validate(r) for r in records]
+            groups[int(emp_id)] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
     def group_certificates_by_course(self) -> Dict[str, CertList]:
         groups: Dict[str, CertList] = {}
         for course_id, grp in self.df.groupby("course_id"):
             records = grp.to_dict(orient="records")
-            groups[course_id] = [EmployeeCertificate.model_validate(r) for r in records]
+            groups[int(course_id)] = [EmployeeCertificate.model_validate(r) for r in records]
         return groups
 
     def get_employee_certificates_by_employee_id(self, employee_id: int) -> CertList:
